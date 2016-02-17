@@ -1,0 +1,146 @@
+<?php
+    include "navigation.php";
+?>
+<html lang="en">
+<head>
+    <title> View </title>
+</head>
+<body>
+    <section id="main-content">
+
+          <section class="wrapper">
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            View Classes - Subject
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li>
+                                <i class="fa fa-dashboard"></i>  <a href="index.php">Home</a>
+                            </li>
+                            <li class="active">
+                                <i class="fa fa-file"></i> View
+                            </li>
+                            <li class="active">
+                                <i class="fa fa-file"></i> View by subject
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <!-- /.row -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">View which subject courses are going on</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form method="post" action="" id="course-form">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <select class = "form-control" name="course" id="course"  onchange="loadTable(this)">
+                                        <option value="0" disabled selected>Select a subject</option>
+                                            <?php
+                                               include 'connect.php';
+												$semq='';
+												if($_SESSION['sess_type']=='student')
+													$semq=' and class.sem="'.$_SESSION['sess_sem'].'" ';
+                                               $query="SELECT distinct name, class.s_initial from class left join subject on class.s_initial=subject.s_initial where type<>'lab' $semq order by s_initial";
+                                               $result=mysqli_query($con,$query);
+echo $query;
+
+                                                while ($row=mysqli_fetch_assoc($result)) 
+                                                {
+												 if(preg_match("/\(|\[/",$row['s_initial']))
+													continue;
+													else
+												 echo "<option value=".$row['s_initial'].">" . $row['s_initial'] ." - ".$row['name']. "</option>";
+                                                }
+                                            ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                 </div>
+                 <div id="response"></div>
+                <?php
+                    if(isset($_POST['course']))
+                    {
+                        //get form data
+                        @$subject=$_POST['course'];
+                        echo "<x>The details for classes in ".$subject." are:<br/><br/>";
+        
+                        //execute query if form data is set and report failure if any
+                        if($subject)
+                        {
+                            $subject="%".$subject."%";
+                            $query="SELECT c.s_initial,start_time,end_time, day,room_no,c.sem, h.faculty_id from class as c left join handles as h on c.s_initial=h.s_initial where c.s_initial like '$subject' ORDER BY FIELD(day,'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN') ";
+                            $result=mysqli_query($con,$query);
+                        }
+                        if($result === FALSE) 
+                        {
+                            die(mysqli_error($con)); // TODO: better error handling
+                        }
+                        
+                        else if(isset($result) and $result != FALSE)
+                        {                       
+                            $num_rows = $result->num_rows;
+                            if($num_rows>0)
+                            {
+                            ?>
+                                <div class="table-responsive">
+                                <table class="table table-hover">
+                                    
+                                <thead>
+                                    <tr>
+										<th>Day</th>
+                                        <th>Sem</th>
+                                        <th>Start Time</th>
+                                        <th>End time</th>
+                                        <th>Subject</th>
+                                        
+                                        <th>Teacher</th>
+										<th>Room no.</th>
+                                    </tr>
+                                </thead>
+
+                            <?php
+                            while($row = mysqli_fetch_assoc($result))
+                            {
+                                echo "<tr>";
+								echo "<td valign=middle align=center>" . $row['day'] . "</td>";
+                                echo "<td valign=middle align=center>" . $row['sem'] . "</td>";
+                                $start=date('g:i', strtotime($row['start_time']));
+                                echo "<td valign=middle align=center>" . $start. "</td>";
+                                $end=date('g:i', strtotime($row['end_time']));
+                                echo "<td valign=middle align=center>" . $end. "</td>";
+                                echo "<td valign=middle align=center>" . $row['s_initial'] . "</td>";
+                                
+                                echo "<td valign=middle align=center>" . $row['faculty_id'] . "</td>";
+								echo "<td valign=middle align=center>" . $row['room_no'] . "</td>";
+                                echo "</tr>";
+                            }
+                            echo "</table>";
+                            echo "</div>";
+                            
+                        }
+                        else
+                        echo "No entries!";
+                    }
+                    else
+                    echo "No entries!";
+                    mysqli_close($con); 
+                    echo "</x>";
+                }
+                else
+                {
+               ?>
+                
+                
+            <!-- /.container-fluid -->
+            <?php
+            }
+			include "footer.php";
+            ?>

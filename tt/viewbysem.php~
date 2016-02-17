@@ -1,0 +1,124 @@
+<?php include "navigation.php"; ?>
+
+<html lang="en">
+<head>
+    <title> View </title>
+	<style type="text/css">
+		#sheet0{
+			background:white;
+		}
+        #sheet0 img{
+            position: relative !important;
+            top: -10px !important;
+            width: 80px !important;
+            height: 80px !important;
+     
+        }
+	</style>
+	<script type="text/javascript">
+	function fixLogo(){
+		$('#sheet0 img').attr('src','assets/img/rvce-logo.jpg');
+	}
+	</script>
+</head>
+
+<body>
+    <section id="main-content">
+
+          <section class="wrapper">
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            View Classes - Sem
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li>
+                                <i class="fa fa-dashboard"></i>  <a href="index.php">Home</a>
+                            </li>
+                            <li class="active">
+                                <i class="fa fa-file"></i> View
+                            </li>
+                            <li class="active">
+                                <i class="fa fa-file"></i> View by sem
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <!-- /.row -->
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">View classes by semester</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form method="post" action="" id="sem-form">
+                             <div class="form-group">
+                                <div class="input-group">
+                                    <select class = "form-control" name="sem" id="sel" onchange="loadTable(this,,fixLogo())">
+                                    <option value="0"  disabled selected>Semester</option>
+                                    <?php                   
+                                        //connect to database and query
+                                        include 'connect.php';
+										$semq='';
+										if($_SESSION['sess_type']=='student')
+											$semq=' where sem="'.$_SESSION['sess_sem'].'" ';
+										$query="SELECT distinct sem from class $semq order by sem";
+                                        $result=mysqli_query($con,$query);
+
+                                        //loop through query results to get select options
+                                        while ($row=mysqli_fetch_assoc($result)) 
+                                        {
+                                            echo "<option value=".$row['sem'].">" . $row['sem'] . "</option>";
+                                        }
+                                    ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>        
+                    </div>
+
+                 </div>
+            <!-- /.container-fluid -->
+            <div id="response"></div>
+                <?php
+                
+                if(isset($_REQUEST['sem']) ||($_SESSION['sess_type']=='student' && $_REQUEST['sem']=$_SESSION['sess_sem']))
+                {
+                    echo "<x>";
+					include 'Classes/PHPExcel/IOFactory.php';
+					$fname="{$_REQUEST['sem']}sem_tt.xlsx";
+					$excel = PHPExcel_IOFactory::load("semTT/{$fname}");
+
+					$writer = PHPExcel_IOFactory::createWriter($excel, 'HTML');
+					$writer->setUseInlineCSS(true);
+					$writer->save("tmp/{$fname}.html");
+					
+					include "tmp/{$fname}.html";
+                    unlink("tmp/{$fname}.html");
+                    
+                    echo "</x>";
+                }
+                else
+                {
+                ?>
+              
+        <?php
+            }
+        ?>
+		
+		<script>
+	 //rvce logo
+     /*
+		el=document.querySelector('#sheet0 img');
+		el.src='assets/img/rvce-logo.jpg';
+		el.style.position='relative';
+		el.style.top='-10px';
+	*/
+	
+</script>
+<?php
+ include "footer.php";
+
+?>
